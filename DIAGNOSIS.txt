@@ -1,0 +1,17 @@
+Build failed after attempting to replace 'src/components/Cyberpunk.tsx'.
+The operation was rolled back as per instructions.
+
+BUILD ERROR:
+The provided replacement code for the Cyberpunk logo removes the 'CyberpunkBox' component export, which is required by 'src/pages/HomePage.tsx'.
+
+Error: Module '"../components/Cyberpunk"' has no exported member 'CyberpunkBox'.
+File: src/pages/HomePage.tsx
+
+---
+
+FILES ATTEMPTED TO CHANGE:
+- src/components/Cyberpunk.tsx
+
+SKIPPED FILES (did not exist as specified):
+- src/components/CyberpunkLogo.tsx
+- src/components/CyberpunkBox.tsx
