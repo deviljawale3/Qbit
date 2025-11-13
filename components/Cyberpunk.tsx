@@ -3,6 +3,9 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import type { ThreeElements } from '@react-three/fiber';
 import { Mesh, Group, Points as PointsType } from 'three';
 
+// Note: The import of '../types/react-three-fiber.d.ts' was removed. While it might help the TypeScript language server, it is not a valid JavaScript module and causes a runtime error in the browser. Type declarations should be handled by the build configuration (e.g., tsconfig.json), not runtime imports.
+
+
 // Post-processing is disabled as '@react-three/postprocessing' is not installed.
 // The EffectsWrapper component will render nothing.
 const EffectsWrapper: React.FC = () => null;

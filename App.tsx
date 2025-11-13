@@ -1,5 +1,6 @@
 
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as BrowserRouterImpl,
   HashRouter as HashRouterImpl,
@@ -14,11 +15,12 @@ import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import {
   PrivacyPolicyPage,
-  TermsOfServicePage,
   AboutPage,
   ContactPage,
 } from './pages/InfoPages';
 import { CyberpunkLogo } from './components/Cyberpunk';
+import TermsConditionsModal from './components/TermsConditionsModal';
+import { detectAndSetBotCookie } from './utils/botDetector';
 
 const isPreview =
   typeof window !== "undefined" &&
@@ -49,7 +51,7 @@ const Header: React.FC = () => {
     );
 }
 
-const Footer: React.FC = () => {
+const Footer: React.FC<{ onTermsClick: () => void }> = ({ onTermsClick }) => {
     return (
         <footer className="relative z-10 bg-black/50 border-t border-orange-400/10">
             <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
@@ -59,7 +61,7 @@ const Footer: React.FC = () => {
                 </div>
                 <div className="flex gap-4 mt-4 sm:mt-0 flex-wrap justify-center">
                     <Link to="/privacy" className="hover:text-orange-300 transition-colors">Privacy Policy</Link>
-                    <Link to="/terms" className="hover:text-orange-300 transition-colors">Terms</Link>
+                    <button onClick={onTermsClick} className="hover:text-orange-300 transition-colors">Terms &amp; Conditions + Disclaimer</button>
                     <Link to="/about" className="hover:text-orange-300 transition-colors">About</Link>
                     <Link to="/contact" className="hover:text-orange-300 transition-colors">Contact</Link>
                 </div>
@@ -70,7 +72,12 @@ const Footer: React.FC = () => {
 
 
 export default function App() {
+    const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
     useEffect(() => {
+        // Run bot detection on initial load
+        detectAndSetBotCookie();
+
         // Register global error listeners for improved debugging
         window.addEventListener("error", (e) => console.error("Global error caught:", e.error));
         window.addEventListener("unhandledrejection", (e) => console.error("Unhandled rejection caught:", e.reason));
@@ -86,14 +93,14 @@ export default function App() {
                             <Route path="/" element={<HomePage />} />
                             <Route path="/dashboard" element={<DashboardPage />} />
                             <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                            <Route path="/terms" element={<TermsOfServicePage />} />
                             <Route path="/about" element={<AboutPage />} />
                             <Route path="/contact" element={<ContactPage />} />
                             <Route path="*" element={<HomePage />} />
                         </Routes>
                     </main>
-                    <Footer />
+                    <Footer onTermsClick={() => setIsTermsModalOpen(true)} />
                 </div>
+                <TermsConditionsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
             </Router>
         </ErrorBoundary>
     );

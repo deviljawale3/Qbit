@@ -1,12 +1,19 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Input, Button } from '../components/UI';
+import { ArrowLeft } from 'lucide-react';
 
 const PageContainer: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-gray-300">
-    <div className="bg-black/40 backdrop-blur-md theme-border p-8">
-        <h1 className="text-4xl font-orbitron font-bold text-orange-400 theme-glow-primary mb-2">{title}</h1>
-        <p className="text-sm text-gray-500 mb-8">Last updated: 09/11/2025</p>
+    <div className="bg-black/40 backdrop-blur-md theme-border p-8 relative">
+        <Link to="/" className="absolute top-4 left-4 text-gray-400 hover:text-white transition-colors" aria-label="Back to Home">
+            <Button variant="secondary" className="!px-3 !py-1 !text-xs">
+                <ArrowLeft size={16} />
+            </Button>
+        </Link>
+        <h1 className="text-4xl font-orbitron font-bold text-orange-400 theme-glow-primary mb-2 mt-8 text-center">{title}</h1>
+        <p className="text-sm text-gray-500 mb-8 text-center">Last updated: 09/11/2025</p>
         <div className="space-y-4 prose prose-invert max-w-none prose-p:text-gray-300 prose-headings:text-yellow-400 prose-headings:font-orbitron prose-a:text-orange-400 hover:prose-a:text-orange-200 prose-ul:list-disc prose-li:my-1 prose-li:text-gray-300 prose-li::marker:text-orange-400">
           {children}
         </div>
@@ -33,34 +40,6 @@ export const PrivacyPolicyPage: React.FC = () => (
     <h2>Contact Us</h2>
     <p>If you have any questions about this Privacy Policy, please contact us by email: <a href="mailto:deejayailabs3@gmail.com">deejayailabs3@gmail.com</a>.</p>
   </PageContainer>
-);
-
-export const TermsOfServicePage: React.FC = () => (
-    <PageContainer title="Terms of Service">
-        <h2>Acceptance of Terms</h2>
-        <p>By accessing or using the Qbit web application (the "Service"), you agree to be bound by these Terms of Service. If you disagree with any part of the terms, then you may not access the Service.</p>
-        
-        <h2>Service Description</h2>
-        <p>Qbit provides a URL shortening and QR code generation service. The service is provided on an "AS IS" and "AS AVAILABLE" basis.</p>
-        
-        <h2>User Obligations</h2>
-        <p>You agree not to use the Service for any illegal or unauthorized purpose. You must not use the Service to shorten URLs that link to malicious, abusive, hateful, or unlawful content. Abuse of the service may result in restricted access.</p>
-        
-        <h2>Intellectual Property</h2>
-        <p>The Service and its original content, features, and functionality are and will remain the exclusive property of the Qbit Project and its licensors.</p>
-        
-        <h2>Disclaimers & Limitation of Liability</h2>
-        <p>Your use of the Service is at your sole risk. The Service is provided without warranties of any kind. In no event shall Qbit be liable for any indirect, incidental, or consequential damages resulting from your use of the service.</p>
-        
-        <h2>Termination</h2>
-        <p>We may terminate or suspend access to our Service immediately, without prior notice or liability, for any reason, including without limitation if you breach the Terms.</p>
-        
-        <h2>Governing Law</h2>
-        <p>These Terms shall be governed in accordance with the applicable laws of your jurisdiction, without regard to its conflict of law provisions.</p>
-
-        <h2>Contact Us</h2>
-        <p>If you have any questions about these Terms, please contact us at: <a href="mailto:deejayailabs3@gmail.com">deejayailabs3@gmail.com</a>.</p>
-    </PageContainer>
 );
 
 export const AboutPage: React.FC = () => (

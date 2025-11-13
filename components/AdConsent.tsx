@@ -7,8 +7,8 @@ const AdConsent: React.FC = () => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const consentGiven = localStorage.getItem('qbit_ad_consent') === 'true';
-      const adsEnabled = process.env.NEXT_PUBLIC_ADSTERRA_SNIPPET && process.env.NEXT_PUBLIC_ADSTERRA_SNIPPET.trim() !== '';
-      if (!consentGiven && adsEnabled) {
+      // Assume ads are enabled if this component is rendered.
+      if (!consentGiven) {
         setVisible(true);
       }
     }

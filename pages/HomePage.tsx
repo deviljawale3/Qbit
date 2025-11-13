@@ -1,6 +1,4 @@
-
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShortenedLink } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -13,6 +11,58 @@ import { Link as LinkIcon, ClipboardCopy, Download, Share2, Twitter, Facebook, L
 import { CyberpunkBox, AnimatedSpaceship } from '../components/Cyberpunk';
 import AdSlot from '../components/AdSlot';
 import AdConsent from '../components/AdConsent';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import type * as THREE from 'three';
+
+const AnimatedWireframe: React.FC = () => {
+    const meshRef = useRef<THREE.Mesh>(null!);
+    const { viewport } = useThree();
+
+    // Scale the wireframe to be slightly smaller than the container width
+    const scale = viewport.width / 3.5;
+
+    useFrame((_state, delta) => {
+        if (meshRef.current) {
+            meshRef.current.rotation.y += delta * 0.1;
+            meshRef.current.rotation.x += delta * 0.05;
+        }
+    });
+
+    return (
+        <mesh ref={meshRef} scale={scale}>
+            <icosahedronGeometry args={[1, 1]} />
+            <meshStandardMaterial
+                color="#ff8c00"
+                emissive="#ff8c00"
+                emissiveIntensity={2.5}
+                wireframe
+                transparent
+                opacity={0.5}
+                toneMapped={false}
+            />
+        </mesh>
+    );
+};
+
+const AnimatedFormCard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return (
+        <div className="relative">
+            <div className="absolute -inset-4 z-0 opacity-70">
+                <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
+                    <ambientLight intensity={0.2} />
+                    <pointLight position={[0, 0, 5]} color="#ff8c00" intensity={4} />
+                    <Suspense fallback={null}>
+                        <AnimatedWireframe />
+                    </Suspense>
+                </Canvas>
+            </div>
+            <div className="relative z-10 bg-black/20 backdrop-blur-sm border border-orange-400/30 p-4 shadow-lg shadow-orange-500/20">
+                {children}
+            </div>
+        </div>
+    );
+};
+
 
 const SocialShareButtons: React.FC<{ url: string }> = ({ url }) => {
     const encodedUrl = encodeURIComponent(url);
@@ -109,6 +159,9 @@ const ResultCard: React.FC<{ link: ShortenedLink }> = ({ link }) => {
                         </div>
                     </div>
                 </div>
+                 <p className="text-xs text-yellow-500/70 mt-4 text-center">
+                    ⚠️ Do not use shortened links for phishing, scams, or harmful activity.
+                </p>
             </Card>
         </motion.div>
     );
@@ -130,7 +183,7 @@ const MobileAd: React.FC = () => {
         return null;
     }
 
-    return <AdSlot id="ad-bottom" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center' }} />;
+    return <AdSlot id="ad-bottom" adClient="ca-pub-XXXXXXXXXXXXXXXX" adSlot="WWWWWWWWWW" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center' }} />;
 };
 
 
@@ -211,71 +264,74 @@ const HomePage: React.FC = () => {
                 <h1 className="text-5xl md:text-7xl font-orbitron font-bold text-white theme-glow-primary">
                     Qbit Shortener
                 </h1>
-                <AdSlot id="ad-top" style={{ width: "100%", textAlign: "center", margin: '1rem 0' }} />
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }}>
-                <p className="mt-4 max-w-2xl text-lg text-gray-400">
+                <p className="mt-2 max-w-2xl text-lg text-gray-400">
                     A link shortening service from the future. Fast, reliable, and supercharged with instant QR code generation.
                 </p>
             </motion.div>
 
-            <div className="w-full max-w-2xl mt-8">
+            <div className="w-full max-w-2xl mt-6">
                 <AnimatePresence mode="wait">
                     {!result ? (
-                        <motion.form
-                            key="form"
-                            onSubmit={handleSubmit}
+                        <motion.div
+                            key="form-wrapper"
                             className="w-full"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <Card className="p-4">
-                                <div className="flex flex-col sm:flex-row gap-4">
-                                    <Input
-                                        icon={<LinkIcon size={18} />}
-                                        type="url"
-                                        placeholder="Enter a long URL to shorten..."
-                                        value={longUrl}
-                                        onChange={(e) => setLongUrl(e.target.value)}
-                                        required
-                                        aria-label="URL to shorten"
-                                    />
-                                </div>
+                            <form
+                                onSubmit={handleSubmit}
+                                className="w-full"
+                            >
+                                <AnimatedFormCard>
+                                    <div className="flex flex-col gap-4">
+                                        <Input
+                                            icon={<LinkIcon size={18} />}
+                                            type="url"
+                                            placeholder="Enter a long URL to shorten..."
+                                            value={longUrl}
+                                            onChange={(e) => setLongUrl(e.target.value)}
+                                            required
+                                            aria-label="URL to shorten"
+                                        />
 
-                                <div className="mt-4">
-                                    <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
-                                        <Settings size={14} />
-                                        Advanced Options
-                                        <ChevronDown size={16} className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    <AnimatePresence>
-                                        {showAdvanced && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                                                animate={{ height: 'auto', opacity: 1, marginTop: '1rem' }}
-                                                exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                                                className="overflow-hidden"
-                                            >
-                                                <Input
-                                                    icon={<Code size={18} />}
-                                                    type="text"
-                                                    placeholder="Custom alias (e.g., my-event)"
-                                                    value={customAlias}
-                                                    onChange={(e) => setCustomAlias(e.target.value.replace(/\s+/g, '-'))}
-                                                    aria-label="Custom alias"
-                                               />
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                                <AdSlot id="ad-inline" style={{ margin: "16px auto", maxWidth: 728, width: "100%" }} />
-                                <Button type="submit" disabled={isLoading} className="w-full mt-4">
-                                    {isLoading ? 'ENCODING...' : 'Shorten'}
-                                </Button>
-                            </Card>
-                        </motion.form>
+                                        <div>
+                                            <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+                                                <Settings size={14} />
+                                                Advanced Options
+                                                <ChevronDown size={16} className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+                                            </button>
+                                            <AnimatePresence>
+                                                {showAdvanced && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1, marginTop: '0.75rem' }}
+                                                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                                        className="overflow-hidden"
+                                                    >
+                                                        <Input
+                                                            icon={<Code size={18} />}
+                                                            type="text"
+                                                            placeholder="Custom alias (e.g., my-event)"
+                                                            value={customAlias}
+                                                            onChange={(e) => setCustomAlias(e.target.value.replace(/\s+/g, '-'))}
+                                                            aria-label="Custom alias"
+                                                       />
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                        <Button type="submit" disabled={isLoading} className="w-full">
+                                            {isLoading ? 'ENCODING...' : 'Shorten'}
+                                        </Button>
+                                    </div>
+                                </AnimatedFormCard>
+                            </form>
+                            <AdSlot id="ad-inline" adClient="ca-pub-XXXXXXXXXXXXXXXX" adSlot="ZZZZZZZZZZ" style={{ margin: "16px auto", maxWidth: 728, width: "100%" }} />
+                        </motion.div>
                     ) : (
                         <motion.div
                             key="result"
