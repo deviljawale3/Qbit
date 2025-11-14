@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, Suspense } from 'react';
+"use client";
+import React, { useState, useRef, useEffect, Suspense, useLayoutEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShortenedLink } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -11,12 +12,14 @@ import { Link as LinkIcon, ClipboardCopy, Download, Share2, Twitter, Facebook, L
 import { CyberpunkBox, AnimatedSpaceship } from '../components/Cyberpunk';
 import AdSlot from '../components/AdSlot';
 import AdConsent from '../components/AdConsent';
+import AdsterraBanner from '../components/AdsterraBanner';
 // Fix: Add a side-effect import for '@react-three/fiber'. This enables its
 // JSX type augmentations, making Three.js elements like <mesh> and <pointLight>
 // available in JSX and resolving all related TypeScript errors in this file.
 import '@react-three/fiber';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import type * as THREE from 'three';
+// Fix: Changed `import type` to a regular import because `THREE` is used as a value (e.g., for geometries).
+import * as THREE from 'three';
 
 const AnimatedWireframe: React.FC = () => {
     const meshRef = useRef<THREE.Mesh>(null!);
@@ -48,19 +51,64 @@ const AnimatedWireframe: React.FC = () => {
     );
 };
 
-const AnimatedFormCard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AnimatedBorder: React.FC<{width: number; height: number}> = ({ width, height }) => {
+    const ref = useRef<THREE.LineSegments>(null!);
+    
+    const geometry = useMemo(() => new THREE.BoxGeometry(width, height, 20), [width, height]);
+    
+    useFrame((state, delta) => {
+        if (ref.current) {
+            ref.current.rotation.x += delta * 0.1;
+            ref.current.rotation.y += delta * 0.15;
+            ref.current.position.z = Math.sin(state.clock.getElapsedTime()) * 5;
+        }
+    });
+
+    return (
+        <lineSegments ref={ref}>
+            <edgesGeometry args={[geometry]} />
+            <lineBasicMaterial color="#ffd700" toneMapped={false} />
+        </lineSegments>
+    )
+};
+
+const AnimatedBorderBox: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [size, setSize] = useState({ width: 0, height: 0 });
+
+    useLayoutEffect(() => {
+        const updateSize = () => {
+             if (contentRef.current) {
+                const { width, height } = contentRef.current.getBoundingClientRect();
+                if (width > 0 && height > 0) {
+                    setSize({ width, height });
+                }
+            }
+        };
+        // Initial measurement
+        updateSize();
+        // A small delay for initial render might be needed for complex layouts
+        const timeoutId = setTimeout(updateSize, 100);
+
+        window.addEventListener('resize', updateSize);
+        return () => {
+            clearTimeout(timeoutId);
+            window.removeEventListener('resize', updateSize);
+        };
+    }, []);
+
     return (
         <div className="relative">
-            <div className="absolute -inset-4 z-0 opacity-70">
-                <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
-                    <ambientLight intensity={0.2} />
-                    <pointLight position={[0, 0, 5]} color="#ff8c00" intensity={4} />
-                    <Suspense fallback={null}>
-                        <AnimatedWireframe />
-                    </Suspense>
-                </Canvas>
-            </div>
-            <div className="relative z-10 bg-black/20 backdrop-blur-sm border border-orange-400/30 p-4 shadow-lg shadow-orange-500/20">
+            {/* Animated Neon Border */}
+            {size.width > 0 && (
+                <div className="absolute inset-0 z-20 pointer-events-none">
+                    {/* Fix: Removed redundant `style` prop. The parent div's `pointer-events-none` class already prevents interaction. */}
+                    <Canvas orthographic camera={{ zoom: 1, position: [0, 0, 100] }}>
+                        <AnimatedBorder width={size.width} height={size.height} />
+                    </Canvas>
+                </div>
+            )}
+            <div ref={contentRef} className="relative z-30">
                 {children}
             </div>
         </div>
@@ -172,21 +220,6 @@ const ResultCard: React.FC<{ link: ShortenedLink }> = ({ link }) => {
 };
 
 const MobileAd: React.FC = () => {
-    const [isMobile, setIsMobile] = useState(false);
-
-    useEffect(() => {
-        const checkSize = () => {
-            setIsMobile(typeof window !== 'undefined' && window.innerWidth < 900);
-        };
-        checkSize();
-        window.addEventListener('resize', checkSize);
-        return () => window.removeEventListener('resize', checkSize);
-    }, []);
-
-    if (!isMobile) {
-        return null;
-    }
-
     // Note: Replace '1234567890' with your actual AdSense ad slot ID for mobile.
     return <AdSlot id="ad-bottom" adClient="ca-pub-3803108248367773" adSlot="1234567890" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center' }} />;
 };
@@ -200,6 +233,43 @@ const HomePage: React.FC = () => {
     const [result, setResult] = useState<ShortenedLink | null>(null);
     const [links, setLinks] = useLocalStorage<ShortenedLink[]>('qbit-links', []);
     const navigate = useNavigate();
+    const [adConsentGiven, setAdConsentGiven] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
+
+
+    useEffect(() => {
+        // Check consent status on mount
+        setAdConsentGiven(localStorage.getItem('qbit_ad_consent') === 'true');
+
+        // Check mobile status
+        const checkSize = () => {
+            setIsMobile(typeof window !== 'undefined' && window.innerWidth < 900);
+        };
+        checkSize();
+        window.addEventListener('resize', checkSize);
+        return () => window.removeEventListener('resize', checkSize);
+    }, []);
+
+    useEffect(() => {
+        // Manage body padding based on component visibility to prevent footer overlap
+        let padding = 0;
+        if (!adConsentGiven) {
+            padding = 70; // Height for AdConsent banner
+        } else if (isMobile) {
+            padding = 50; // Height for MobileAd banner
+        }
+        document.body.style.paddingBottom = `${padding}px`;
+
+        // Cleanup function to reset padding when navigating away from the home page
+        return () => {
+            document.body.style.paddingBottom = '0';
+        };
+    }, [adConsentGiven, isMobile]);
+
+    const handleConsentDismiss = () => {
+        localStorage.setItem('qbit_ad_consent', 'true');
+        setAdConsentGiven(true);
+    };
 
     const MOCK_COUNTRIES = ['USA', 'Germany', 'Japan', 'Brazil', 'India', 'UK'];
 
@@ -255,7 +325,7 @@ const HomePage: React.FC = () => {
     return (
         <>
         <CyberpunkBox />
-        <div className="fixed bottom-32 left-16 z-0 opacity-40 pointer-events-none">
+        <div className="fixed bottom-32 left-16 z-[1] opacity-40 pointer-events-none">
             <AnimatedSpaceship />
         </div>
         <div className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] px-4 text-center">
@@ -291,52 +361,70 @@ const HomePage: React.FC = () => {
                                 onSubmit={handleSubmit}
                                 className="w-full"
                             >
-                                <AnimatedFormCard>
-                                    <div className="flex flex-col gap-4">
-                                        <Input
-                                            icon={<LinkIcon size={18} />}
-                                            type="url"
-                                            placeholder="Enter a long URL to shorten..."
-                                            value={longUrl}
-                                            onChange={(e) => setLongUrl(e.target.value)}
-                                            required
-                                            aria-label="URL to shorten"
-                                        />
-
-                                        <div>
-                                            <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
-                                                <Settings size={14} />
-                                                Advanced Options
-                                                <ChevronDown size={16} className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
-                                            </button>
-                                            <AnimatePresence>
-                                                {showAdvanced && (
-                                                    <motion.div
-                                                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                                                        animate={{ height: 'auto', opacity: 1, marginTop: '0.75rem' }}
-                                                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                                                        className="overflow-hidden"
-                                                    >
-                                                        <Input
-                                                            icon={<Code size={18} />}
-                                                            type="text"
-                                                            placeholder="Custom alias (e.g., my-event)"
-                                                            value={customAlias}
-                                                            onChange={(e) => setCustomAlias(e.target.value.replace(/\s+/g, '-'))}
-                                                            aria-label="Custom alias"
-                                                       />
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
+                                <div className="relative w-full">
+                                    {/* Background 3D Object */}
+                                    <div className="absolute -inset-4 z-0 opacity-50 pointer-events-none">
+                                        {/* Fix: Removed redundant `style` prop. The parent div's `pointer-events-none` class already prevents interaction. */}
+                                        <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
+                                            <ambientLight intensity={0.2} />
+                                            <pointLight position={[0, 0, 5]} color="#ff8c00" intensity={4} />
+                                            <Suspense fallback={null}>
+                                                <AnimatedWireframe />
+                                            </Suspense>
+                                        </Canvas>
+                                    </div>
+                                    
+                                    <div className="relative z-10 bg-black/40 backdrop-blur-md p-4 shadow-lg shadow-orange-500/20 flex flex-col gap-4">
+                                        <AnimatedBorderBox>
+                                            <div className="flex flex-col gap-4">
+                                                <Input
+                                                    icon={<LinkIcon size={18} />}
+                                                    type="url"
+                                                    placeholder="Enter a long URL to shorten..."
+                                                    value={longUrl}
+                                                    onChange={(e) => setLongUrl(e.target.value)}
+                                                    required
+                                                    aria-label="URL to shorten"
+                                                />
+                                                <div>
+                                                    <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+                                                        <Settings size={14} />
+                                                        Advanced Options
+                                                        <ChevronDown size={16} className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+                                                    </button>
+                                                    <AnimatePresence>
+                                                        {showAdvanced && (
+                                                            <motion.div
+                                                                initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                                                animate={{ height: 'auto', opacity: 1, marginTop: '0.75rem' }}
+                                                                exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                                                className="overflow-hidden"
+                                                            >
+                                                                <Input
+                                                                    icon={<Code size={18} />}
+                                                                    type="text"
+                                                                    placeholder="Custom alias (e.g., my-event)"
+                                                                    value={customAlias}
+                                                                    onChange={(e) => setCustomAlias(e.target.value.replace(/\s+/g, '-'))}
+                                                                    aria-label="Custom alias"
+                                                               />
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            </div>
+                                        </AnimatedBorderBox>
+                                        
                                         <Button type="submit" disabled={isLoading} className="w-full">
                                             {isLoading ? 'ENCODING...' : 'Shorten'}
                                         </Button>
+
+                                        <div className="ad-cluster">
+                                            <AdsterraBanner id="300x250_main" />
+                                        </div>
                                     </div>
-                                </AnimatedFormCard>
+                                </div>
                             </form>
-                            {/* Note: Replace '0987654321' with your actual AdSense ad slot ID for the inline unit. */}
-                            <AdSlot id="ad-inline" adClient="ca-pub-3803108248367773" adSlot="0987654321" style={{ margin: "16px auto", maxWidth: 728, width: "100%" }} />
                         </motion.div>
                     ) : (
                         <motion.div
@@ -369,8 +457,8 @@ const HomePage: React.FC = () => {
                 </AnimatePresence>
             </div>
         </div>
-        <MobileAd />
-        <AdConsent />
+        {isMobile && <MobileAd />}
+        {!adConsentGiven && <AdConsent onDismiss={handleConsentDismiss} />}
         </>
     );
 };

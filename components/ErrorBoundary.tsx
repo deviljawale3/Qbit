@@ -3,15 +3,8 @@
 import React from "react";
 import type { ErrorInfo, ReactNode } from "react";
 
-interface Props {
-  children?: ReactNode;
-}
-
-interface State {
-  hasError: boolean;
-  error?: Error | null;
-  info?: ErrorInfo | null;
-}
+interface Props { children?: ReactNode; }
+interface State { hasError: boolean; error?: Error | null; info?: ErrorInfo | null; }
 
 export default class ErrorBoundary extends React.Component<Props, State> {
   // Fix: Switched to a constructor for state initialization.
@@ -27,48 +20,34 @@ export default class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // explicit console logging (studio-friendly)
-    // eslint-disable-next-line no-console
+    // Log and store error info
     console.error("ErrorBoundary caught:", error, info);
     this.setState({ error, info });
-    // Optional: send to remote logger via a client API call
+    // (optional) send to logging endpoint if present
   }
 
   // Arrow function binds 'this' for the event handler.
   handleReload = () => {
-    try {
-      window.location.reload();
-    } catch {
-      window.location.replace(window.location.href);
-    }
-  };
+    try { window.location.reload(); } catch { window.location.replace(window.location.href); }
+  }
 
   render() {
     const { hasError, error, info } = this.state;
-
     if (hasError) {
       return (
-        <main className="error-screen">
-          <h1 className="error-title">Something went wrong.</h1>
-
-          <p className="error-message">
-            We caught an unexpected error in the application. Try reloading the
-            page — if the problem persists, contact{" "}
-            <a className="error-contact" href="mailto:deviljawale@gmail.com">
-              deviljawale@gmail.com
-            </a>
-            .
+        <main style={{ fontFamily: "system-ui, sans-serif", padding: 24, color: "#e0e0e0", background: "#040404", minHeight: "100vh" }}>
+          <h1 style={{ fontSize: 24, marginBottom: 8 }}>Something went wrong.</h1>
+          <p style={{ marginTop: 0, opacity: 0.85 }}>
+            Try reloading — if the problem persists, contact <a href="mailto:deviljawale@gmail.com" style={{ color: "#ff8c00" }}>deviljawale@gmail.com</a>.
           </p>
-
-          <div className="error-actions">
-            <button onClick={this.handleReload} className="reload-btn">
+          <div style={{ marginTop: 16 }}>
+            <button onClick={this.handleReload} style={{ background: "#ff8c00", color: "#000", padding: "8px 14px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 600 }}>
               Reload page
             </button>
           </div>
-
-          <details className="error-details">
-            <summary className="error-summary">Error details (expand)</summary>
-            <pre className="error-pre">
+          <details style={{ marginTop: 16, background: "#0f0f0f", padding: 12, border: "1px solid rgba(255,140,0,0.15)" }}>
+            <summary style={{ cursor: "pointer" }}>Error details (expand)</summary>
+            <pre style={{ whiteSpace: "pre-wrap", marginTop: 8, color: "#e0e0e0" }}>
               {String(error?.message || "Unknown error")}
               {info ? `\n\nComponent stack:\n${info.componentStack}` : ""}
             </pre>
@@ -76,7 +55,6 @@ export default class ErrorBoundary extends React.Component<Props, State> {
         </main>
       );
     }
-
     return this.props.children ?? null;
   }
 }
