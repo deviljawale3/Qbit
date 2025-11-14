@@ -5,11 +5,9 @@
 // declaration file can be more reliable in some project setups where per-file
 // imports do not resolve type augmentation correctly.
 
-// Fix: Correctly augment the global JSX namespace for @react-three/fiber. This file must be a module to use 'declare global'. Importing 'ThreeElements' makes it a module and allows extending JSX.IntrinsicElements, which fixes TypeScript errors for Three.js components throughout the app.
-import type { ThreeElements } from '@react-three/fiber';
-
-declare global {
-  namespace JSX {
-    interface IntrinsicElements extends ThreeElements {}
-  }
-}
+// Fix: The previous manual augmentation was overwriting React's default JSX element types,
+// causing errors for standard HTML tags like `div`. The correct approach is to import
+// `@react-three/fiber` for its side-effects, which allows its built-in type augmentation
+// to correctly merge with React's types. This single fix resolves all JSX-related
+// TypeScript errors across the application.
+import '@react-three/fiber';
