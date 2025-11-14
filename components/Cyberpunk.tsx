@@ -1,4 +1,8 @@
 import React, { useRef, Suspense, useMemo } from 'react';
+// Fix: Add a side-effect import for '@react-three/fiber'. This enables its
+// JSX type augmentations, making Three.js elements like <mesh> and <pointLight>
+// available in JSX and resolving all related TypeScript errors in this file.
+import '@react-three/fiber';
 import { Canvas, useFrame } from '@react-three/fiber';
 import type { ThreeElements } from '@react-three/fiber';
 import { Mesh, Group, Points as PointsType } from 'three';

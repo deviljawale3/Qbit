@@ -11,6 +11,10 @@ import { Link as LinkIcon, ClipboardCopy, Download, Share2, Twitter, Facebook, L
 import { CyberpunkBox, AnimatedSpaceship } from '../components/Cyberpunk';
 import AdSlot from '../components/AdSlot';
 import AdConsent from '../components/AdConsent';
+// Fix: Add a side-effect import for '@react-three/fiber'. This enables its
+// JSX type augmentations, making Three.js elements like <mesh> and <pointLight>
+// available in JSX and resolving all related TypeScript errors in this file.
+import '@react-three/fiber';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import type * as THREE from 'three';
 
@@ -183,7 +187,8 @@ const MobileAd: React.FC = () => {
         return null;
     }
 
-    return <AdSlot id="ad-bottom" adClient="ca-pub-XXXXXXXXXXXXXXXX" adSlot="WWWWWWWWWW" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center' }} />;
+    // Note: Replace '1234567890' with your actual AdSense ad slot ID for mobile.
+    return <AdSlot id="ad-bottom" adClient="ca-pub-3803108248367773" adSlot="1234567890" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center' }} />;
 };
 
 
@@ -330,7 +335,8 @@ const HomePage: React.FC = () => {
                                     </div>
                                 </AnimatedFormCard>
                             </form>
-                            <AdSlot id="ad-inline" adClient="ca-pub-XXXXXXXXXXXXXXXX" adSlot="ZZZZZZZZZZ" style={{ margin: "16px auto", maxWidth: 728, width: "100%" }} />
+                            {/* Note: Replace '0987654321' with your actual AdSense ad slot ID for the inline unit. */}
+                            <AdSlot id="ad-inline" adClient="ca-pub-3803108248367773" adSlot="0987654321" style={{ margin: "16px auto", maxWidth: 728, width: "100%" }} />
                         </motion.div>
                     ) : (
                         <motion.div

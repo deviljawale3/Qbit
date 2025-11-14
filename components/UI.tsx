@@ -1,8 +1,11 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
+// Fix: Import HTMLMotionProps and update ButtonProps to extend it instead of React.ButtonHTMLAttributes.
+// This resolves a type conflict between standard React event handlers (e.g., onDrag)
+// and Framer Motion's gesture handlers, which caused the original error.
+import { motion, HTMLMotionProps } from 'framer-motion';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends HTMLMotionProps<'button'> {
   children: React.ReactNode;
   variant?: 'primary' | 'secondary';
 }
