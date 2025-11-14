@@ -7,9 +7,9 @@ interface Props { children?: ReactNode; }
 interface State { hasError: boolean; error?: Error | null; info?: ErrorInfo | null; }
 
 export default class ErrorBoundary extends React.Component<Props, State> {
-  // Fix: Switched to a constructor for state initialization.
-  // This is a classic React pattern that ensures 'this' is correctly set up,
-  // resolving type errors related to 'this.setState' and 'this.props'.
+  // Fix: Replaced the state property initializer with a constructor to explicitly
+  // call `super(props)` and initialize state. This ensures that the component
+  // instance has access to `this.props` and `this.setState`.
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null, info: null };
