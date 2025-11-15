@@ -1,10 +1,9 @@
 "use client";
 
-// Fix: Changed React import to `import * as React from "react";` to ensure
-// correct module resolution, which can resolve issues where TypeScript fails
-// to recognize inherited properties like `props` and `setState` from React.Component.
-import * as React from "react";
-import type { ErrorInfo, ReactNode } from "react";
+// Fix: Changed the React import to explicitly import `Component` and other types.
+// This is a more robust pattern that ensures TypeScript correctly resolves the
+// base class and its properties like `props` and `setState`.
+import React, { Component, ErrorInfo, ReactNode } from "react";
 
 interface Props {
   children?: ReactNode;
@@ -16,7 +15,7 @@ interface State {
   info?: ErrorInfo | null;
 }
 
-export default class ErrorBoundary extends React.Component<Props, State> {
+export default class ErrorBoundary extends Component<Props, State> {
   // Fix: Use a class property initializer for state. This is a modern and concise
   // approach that avoids potential 'this' context issues in constructors
   // under certain TypeScript configurations.
