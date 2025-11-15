@@ -21,6 +21,7 @@ import {
 import { CyberpunkLogo } from './components/Cyberpunk';
 import TermsConditionsModal from './components/TermsConditionsModal';
 import { detectAndSetBotCookie } from './utils/botDetector';
+import AdsterraSocialBar from './components/AdsterraSocialBar';
 
 const isPreview =
   typeof window !== "undefined" &&
@@ -73,6 +74,8 @@ const Footer: React.FC<{ onTermsClick: () => void }> = ({ onTermsClick }) => {
 
 export default function App() {
     const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+    const [adConsentGiven, setAdConsentGiven] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
         // Run bot detection on initial load
@@ -81,7 +84,47 @@ export default function App() {
         // Register global error listeners for improved debugging
         window.addEventListener("error", (e) => console.error("Global error caught:", e.error));
         window.addEventListener("unhandledrejection", (e) => console.error("Unhandled rejection caught:", e.reason));
+        
+        // Check consent status on mount
+        setAdConsentGiven(localStorage.getItem('qbit_ad_consent') === 'true');
+
+        // Check mobile status
+        const checkSize = () => {
+            setIsMobile(typeof window !== 'undefined' && window.innerWidth < 900);
+        };
+        checkSize();
+        window.addEventListener('resize', checkSize);
+
+        return () => window.removeEventListener('resize', checkSize);
     }, []);
+
+    useEffect(() => {
+        // Manage body padding for fixed-bottom ads to prevent content overlap.
+        // This is now centralized and site-wide.
+        let padding = 0;
+        if (!adConsentGiven) {
+            padding = 70; // Height for AdConsent banner
+        } else {
+            // Social bar is always present if consent is given.
+            padding = 70; // Approx. height for Social Bar
+            if (isMobile) {
+                padding += 50; // Add height for the bottom AdSense banner on mobile
+            }
+        }
+        document.body.style.paddingBottom = `${padding}px`;
+
+        // Cleanup function to reset padding
+        return () => {
+            document.body.style.paddingBottom = '0';
+        };
+    }, [adConsentGiven, isMobile]);
+
+    const handleConsentDismiss = () => {
+        localStorage.setItem('qbit_ad_consent', 'true');
+        setAdConsentGiven(true);
+    };
+
+    const homePageProps = { isMobile, adConsentGiven, onConsentDismiss: handleConsentDismiss };
 
     return (
         <ErrorBoundary>
@@ -90,17 +133,18 @@ export default function App() {
                     <Header />
                     <main className="flex-grow">
                         <Routes>
-                            <Route path="/" element={<HomePage />} />
+                            <Route path="/" element={<HomePage {...homePageProps} />} />
                             <Route path="/dashboard" element={<DashboardPage />} />
                             <Route path="/privacy" element={<PrivacyPolicyPage />} />
                             <Route path="/about" element={<AboutPage />} />
                             <Route path="/contact" element={<ContactPage />} />
-                            <Route path="*" element={<HomePage />} />
+                            <Route path="*" element={<HomePage {...homePageProps} />} />
                         </Routes>
                     </main>
                     <Footer onTermsClick={() => setIsTermsModalOpen(true)} />
                 </div>
                 <TermsConditionsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
+                {adConsentGiven && <AdsterraSocialBar />}
             </Router>
         </ErrorBoundary>
     );

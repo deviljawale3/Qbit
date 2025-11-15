@@ -18,6 +18,12 @@ import AdsterraBanner from '../components/AdsterraBanner';
 // available in JSX and resolving all related TypeScript errors in this file.
 import '@react-three/fiber';
 
+interface HomePageProps {
+  isMobile: boolean;
+  adConsentGiven: boolean;
+  onConsentDismiss: () => void;
+}
+
 const WhatsAppIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" {...props}>
         <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.886-.001 2.267.651 4.383 1.905 6.344l-1.196 4.359 4.559-1.187zM8.341 7.218c-.375-.164-.848-.158-1.291.096-.442.253-.729.569-.871.849-.142.28-.214.61-.173.945.041.335.214.643.465.918.251.275.586.583.992.949.406.366.848.775 1.328 1.229.833.731 1.523 1.24 2.228 1.583.704.344 1.358.471 1.923.428.566-.043 1.063-.24 1.408-.569.345-.329.516-.769.516-1.242 0-.472-.172-.882-.516-1.221-.345-.338-.82-.519-1.348-.519h-.12c-.221 0-.438.03-.647.09-.209.06-.403.119-.581.119-.179 0-.375-.059-.553-.178-.178-.119-.383-.265-.61-.438-.459-.353-.847-.799-1.162-1.221-.314-.423-.471-.899-.471-1.378 0-.119.014-.248.043-.387.028-.139.085-.258.171-.357.086-.1.199-.143.34-.143.099 0 .199.014.285.043.086.028.188.071.303.128.115.057.217.086.303.086.131 0 .277-.02.438-.061.162-.041.324-.099.465-.178.142-.078.259-.164.35-.258.09-.095.143-.209.157-.341a.846.846 0 00-.043-.516c-.071-.24-.2-.464-.383-.671z"/>
@@ -162,7 +168,7 @@ const MobileAd: React.FC = () => {
 };
 
 
-const HomePage: React.FC = () => {
+const HomePage: React.FC<HomePageProps> = ({ isMobile, adConsentGiven, onConsentDismiss }) => {
     const [longUrl, setLongUrl] = useState('');
     const [customAlias, setCustomAlias] = useState('');
     const [showAdvanced, setShowAdvanced] = useState(false);
@@ -170,43 +176,7 @@ const HomePage: React.FC = () => {
     const [result, setResult] = useState<ShortenedLink | null>(null);
     const [links, setLinks] = useLocalStorage<ShortenedLink[]>('qbit-links', []);
     const navigate = useNavigate();
-    const [adConsentGiven, setAdConsentGiven] = useState(true);
-    const [isMobile, setIsMobile] = useState(false);
 
-
-    useEffect(() => {
-        // Check consent status on mount
-        setAdConsentGiven(localStorage.getItem('qbit_ad_consent') === 'true');
-
-        // Check mobile status
-        const checkSize = () => {
-            setIsMobile(typeof window !== 'undefined' && window.innerWidth < 900);
-        };
-        checkSize();
-        window.addEventListener('resize', checkSize);
-        return () => window.removeEventListener('resize', checkSize);
-    }, []);
-
-    useEffect(() => {
-        // Manage body padding based on component visibility to prevent footer overlap
-        let padding = 0;
-        if (!adConsentGiven) {
-            padding = 70; // Height for AdConsent banner
-        } else if (isMobile) {
-            padding = 50; // Height for MobileAd banner
-        }
-        document.body.style.paddingBottom = `${padding}px`;
-
-        // Cleanup function to reset padding when navigating away from the home page
-        return () => {
-            document.body.style.paddingBottom = '0';
-        };
-    }, [adConsentGiven, isMobile]);
-
-    const handleConsentDismiss = () => {
-        localStorage.setItem('qbit_ad_consent', 'true');
-        setAdConsentGiven(true);
-    };
 
     const MOCK_COUNTRIES = ['USA', 'Germany', 'Japan', 'Brazil', 'India', 'UK'];
 
@@ -379,8 +349,8 @@ const HomePage: React.FC = () => {
                 </AnimatePresence>
             </div>
         </div>
-        {isMobile && <MobileAd />}
-        {!adConsentGiven && <AdConsent onDismiss={handleConsentDismiss} />}
+        {isMobile && adConsentGiven && <MobileAd />}
+        {!adConsentGiven && <AdConsent onDismiss={onConsentDismiss} />}
         </>
     );
 };
