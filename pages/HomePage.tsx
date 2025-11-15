@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect, Suspense, useLayoutEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShortenedLink } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -17,103 +17,6 @@ import AdsterraBanner from '../components/AdsterraBanner';
 // JSX type augmentations, making Three.js elements like <mesh> and <pointLight>
 // available in JSX and resolving all related TypeScript errors in this file.
 import '@react-three/fiber';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-// Fix: Changed `import type` to a regular import because `THREE` is used as a value (e.g., for geometries).
-import * as THREE from 'three';
-
-const AnimatedWireframe: React.FC = () => {
-    const meshRef = useRef<THREE.Mesh>(null!);
-    const { viewport } = useThree();
-
-    // Scale the wireframe to be slightly smaller than the container width
-    const scale = viewport.width / 3.5;
-
-    useFrame((_state, delta) => {
-        if (meshRef.current) {
-            meshRef.current.rotation.y += delta * 0.1;
-            meshRef.current.rotation.x += delta * 0.05;
-        }
-    });
-
-    return (
-        <mesh ref={meshRef} scale={scale}>
-            <icosahedronGeometry args={[1, 1]} />
-            <meshStandardMaterial
-                color="#ff8c00"
-                emissive="#ff8c00"
-                emissiveIntensity={2.5}
-                wireframe
-                transparent
-                opacity={0.5}
-                toneMapped={false}
-            />
-        </mesh>
-    );
-};
-
-const AnimatedBorder: React.FC<{width: number; height: number}> = ({ width, height }) => {
-    const ref = useRef<THREE.LineSegments>(null!);
-    
-    const geometry = useMemo(() => new THREE.BoxGeometry(width, height, 20), [width, height]);
-    
-    useFrame((state, delta) => {
-        if (ref.current) {
-            ref.current.rotation.x += delta * 0.1;
-            ref.current.rotation.y += delta * 0.15;
-            ref.current.position.z = Math.sin(state.clock.getElapsedTime()) * 5;
-        }
-    });
-
-    return (
-        <lineSegments ref={ref}>
-            <edgesGeometry args={[geometry]} />
-            <lineBasicMaterial color="#ffd700" toneMapped={false} />
-        </lineSegments>
-    )
-};
-
-const AnimatedBorderBox: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const contentRef = useRef<HTMLDivElement>(null);
-    const [size, setSize] = useState({ width: 0, height: 0 });
-
-    useLayoutEffect(() => {
-        const updateSize = () => {
-             if (contentRef.current) {
-                const { width, height } = contentRef.current.getBoundingClientRect();
-                if (width > 0 && height > 0) {
-                    setSize({ width, height });
-                }
-            }
-        };
-        // Initial measurement
-        updateSize();
-        // A small delay for initial render might be needed for complex layouts
-        const timeoutId = setTimeout(updateSize, 100);
-
-        window.addEventListener('resize', updateSize);
-        return () => {
-            clearTimeout(timeoutId);
-            window.removeEventListener('resize', updateSize);
-        };
-    }, []);
-
-    return (
-        <div className="relative">
-            {/* Animated Neon Border */}
-            {size.width > 0 && (
-                <div className="absolute inset-0 z-20 pointer-events-none">
-                    {/* Fix: Removed redundant `style` prop. The parent div's `pointer-events-none` class already prevents interaction. */}
-                    <Canvas orthographic camera={{ zoom: 1, position: [0, 0, 100] }}>
-                        <AnimatedBorder width={size.width} height={size.height} />
-                    </Canvas>
-                </div>
-            )}
-            <div ref={contentRef} className="relative z-30">
-                {children}
-            </div>
-        </div>
-    );
-};
 
 
 const SocialShareButtons: React.FC<{ url: string }> = ({ url }) => {
@@ -336,12 +239,12 @@ const HomePage: React.FC = () => {
                 transition={{ duration: 0.5 }}
                 className="flex flex-col items-center justify-center w-full"
             >
-                <h1 className="text-5xl md:text-7xl font-orbitron font-bold text-white theme-glow-primary">
+                <h1 className="text-5xl md:text-7xl font-orbitron font-bold text-orange-400 theme-glow-primary">
                     Qbit Shortener
                 </h1>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }}>
-                <p className="mt-2 max-w-2xl text-lg text-gray-400">
+                <p className="mt-2 max-w-2xl text-lg text-gray-300">
                     A link shortening service from the future. Fast, reliable, and supercharged with instant QR code generation.
                 </p>
             </motion.div>
@@ -362,66 +265,51 @@ const HomePage: React.FC = () => {
                                 className="w-full"
                             >
                                 <div className="relative w-full">
-                                    {/* Background 3D Object */}
-                                    <div className="absolute -inset-4 z-0 opacity-50 pointer-events-none">
-                                        {/* Fix: Removed redundant `style` prop. The parent div's `pointer-events-none` class already prevents interaction. */}
-                                        <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
-                                            <ambientLight intensity={0.2} />
-                                            <pointLight position={[0, 0, 5]} color="#ff8c00" intensity={4} />
-                                            <Suspense fallback={null}>
-                                                <AnimatedWireframe />
-                                            </Suspense>
-                                        </Canvas>
-                                    </div>
-                                    
-                                    <div className="relative z-10 bg-black/40 backdrop-blur-md p-4 shadow-lg shadow-orange-500/20 flex flex-col gap-4">
-                                        <AnimatedBorderBox>
-                                            <div className="flex flex-col gap-4">
-                                                <Input
-                                                    icon={<LinkIcon size={18} />}
-                                                    type="url"
-                                                    placeholder="Enter a long URL to shorten..."
-                                                    value={longUrl}
-                                                    onChange={(e) => setLongUrl(e.target.value)}
-                                                    required
-                                                    aria-label="URL to shorten"
-                                                />
-                                                <div>
-                                                    <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
-                                                        <Settings size={14} />
-                                                        Advanced Options
-                                                        <ChevronDown size={16} className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
-                                                    </button>
-                                                    <AnimatePresence>
-                                                        {showAdvanced && (
-                                                            <motion.div
-                                                                initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                                                                animate={{ height: 'auto', opacity: 1, marginTop: '0.75rem' }}
-                                                                exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                                                                className="overflow-hidden"
-                                                            >
-                                                                <Input
-                                                                    icon={<Code size={18} />}
-                                                                    type="text"
-                                                                    placeholder="Custom alias (e.g., my-event)"
-                                                                    value={customAlias}
-                                                                    onChange={(e) => setCustomAlias(e.target.value.replace(/\s+/g, '-'))}
-                                                                    aria-label="Custom alias"
-                                                               />
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
-                                                </div>
+                                    <div className="relative z-10 bg-black/40 backdrop-blur-md p-4 shadow-lg shadow-orange-500/20 flex flex-col gap-4 theme-border">
+                                        <div className="flex flex-col gap-4">
+                                            <Input
+                                                icon={<LinkIcon size={18} />}
+                                                type="url"
+                                                placeholder="Enter a long URL to shorten..."
+                                                value={longUrl}
+                                                onChange={(e) => setLongUrl(e.target.value)}
+                                                required
+                                                aria-label="URL to shorten"
+                                            />
+                                            <div>
+                                                <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+                                                    <Settings size={14} />
+                                                    Advanced Options
+                                                    <ChevronDown size={16} className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+                                                </button>
+                                                <AnimatePresence>
+                                                    {showAdvanced && (
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                                            animate={{ height: 'auto', opacity: 1, marginTop: '0.75rem' }}
+                                                            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                                            className="overflow-hidden"
+                                                        >
+                                                            <Input
+                                                                icon={<Code size={18} />}
+                                                                type="text"
+                                                                placeholder="Custom alias (e.g., my-event)"
+                                                                value={customAlias}
+                                                                onChange={(e) => setCustomAlias(e.target.value.replace(/\s+/g, '-'))}
+                                                                aria-label="Custom alias"
+                                                            />
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
                                             </div>
-                                        </AnimatedBorderBox>
+                                        </div>
                                         
                                         <Button type="submit" disabled={isLoading} className="w-full">
                                             {isLoading ? 'ENCODING...' : 'Shorten'}
                                         </Button>
-
-                                        <div className="ad-cluster">
-                                            <AdsterraBanner id="300x250_main" />
-                                        </div>
+                                    </div>
+                                    <div className="ad-cluster mt-6">
+                                        <AdsterraBanner id="300x250_main" />
                                     </div>
                                 </div>
                             </form>
