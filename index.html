@@ -99,6 +99,46 @@
 </head>
   <body>
     <div id="root"></div>
+    <script type="text/javascript">
+      (function() {
+        function loadAdsterra() {
+          // 1. Do not load if Google AdSense is present.
+          if (window.adsbygoogle || document.querySelector('ins.adsbygoogle')) {
+            console.info('Qbit Loader: Google AdSense detected. Skipping Adsterra script.');
+            return;
+          }
+      
+          // 2. Respect a manual "do not disturb" flag.
+          if (window.QBIT_ADS_DND === true) {
+            console.info('Qbit Loader: DND flag is active. Skipping Adsterra script.');
+            return;
+          }
+      
+          // 3. Create the required container if it does not exist.
+          var containerId = 'container-7d5e4df837c026cdeed76027687a003d';
+          if (!document.getElementById(containerId)) {
+            var container = document.createElement('div');
+            container.id = containerId;
+            document.body.appendChild(container);
+          }
+      
+          // 4 & 5. Load the Adsterra script asynchronously.
+          var script = document.createElement('script');
+          script.async = true;
+          script.setAttribute('data-cfasync', 'false');
+          script.src = '//www.profitabledisplaynetwork.com/7d5e4df837c026cdeed76027687a003d/invoke.js';
+          document.head.appendChild(script);
+        }
+      
+        // Load after DOM is ready.
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', loadAdsterra);
+        } else {
+          // DOMContentLoaded has already fired.
+          loadAdsterra();
+        }
+      })();
+    </script>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
