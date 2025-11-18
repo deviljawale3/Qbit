@@ -1,13 +1,15 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+// Fix: Replace react-router-dom's Link with Next.js's Link component for proper navigation in a Next.js app.
+import Link from 'next/link';
 import { Input, Button } from '../components/UI';
 import { ArrowLeft } from 'lucide-react';
 
 const PageContainer: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-gray-300">
     <div className="bg-black/40 backdrop-blur-md theme-border p-8 relative">
-        <Link to="/" className="absolute top-4 left-4 text-gray-400 hover:text-white transition-colors" aria-label="Back to Home">
+        {/* Fix: Use href prop for Next.js Link component. */}
+        <Link href="/" className="absolute top-4 left-4 text-gray-400 hover:text-white transition-colors" aria-label="Back to Home">
             <Button variant="secondary" className="!px-3 !py-1 !text-xs">
                 <ArrowLeft size={16} />
             </Button>

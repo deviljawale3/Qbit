@@ -1,13 +1,10 @@
 
 
+"use client";
 import React, { useEffect, useState } from 'react';
-import {
-  BrowserRouter as BrowserRouterImpl,
-  HashRouter as HashRouterImpl,
-  Routes,
-  Route,
-  Link
-} from "react-router-dom";
+// Fix: Removed incorrect react-router-dom imports.
+// Fix: Added import for Next.js's Link component.
+import Link from 'next/link';
 
 // Import components
 import ErrorBoundary from './ErrorBoundary';
@@ -23,17 +20,9 @@ import TermsConditionsModal from './components/TermsConditionsModal';
 import { detectAndSetBotCookie } from './utils/botDetector';
 import AdsterraSocialBar from './components/AdsterraSocialBar';
 
-const isPreview =
-  typeof window !== "undefined" &&
-  (window.self !== window.top ||
-   window.location.hostname.includes("studio.google") ||
-   window.location.hostname.includes("googleusercontent.com"));
-
-const Router = isPreview ? HashRouterImpl : BrowserRouterImpl;
-
-console.info("Qbit router selection:", isPreview ? "hash (preview)" : "browser (prod)", {
-  hostname: typeof window !== "undefined" ? window.location.hostname : "unknown"
-});
+// Fix: Removed router-related logic as it's handled by Next.js file-based routing.
+// const isPreview = ...
+// const Router = ...
 
 
 // Re-create Header and Footer to preserve layout
@@ -42,7 +31,8 @@ const Header: React.FC = () => {
         <header className="sticky top-0 z-50 bg-black/50 backdrop-blur-md">
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-center h-20 border-b border-orange-400/10">
-                    <Link to="/" className="flex items-center gap-2">
+                    {/* Fix: Use Next.js Link and href prop. */}
+                    <Link href="/" className="flex items-center gap-2">
                         <CyberpunkLogo />
                         <span className="font-orbitron text-2xl font-bold text-white tracking-widest">QBIT</span>
                     </Link>
@@ -61,10 +51,13 @@ const Footer: React.FC<{ onTermsClick: () => void }> = ({ onTermsClick }) => {
                     <p className="text-orange-400/80 theme-glow-primary">Introduced By - DeeJay AI Labs</p>
                 </div>
                 <div className="flex gap-4 mt-4 sm:mt-0 flex-wrap justify-center">
-                    <Link to="/privacy" className="hover:text-orange-300 transition-colors">Privacy Policy</Link>
+                    {/* Fix: Use Next.js Link and href prop. */}
+                    <Link href="/privacy" className="hover:text-orange-300 transition-colors">Privacy Policy</Link>
                     <button onClick={onTermsClick} className="hover:text-orange-300 transition-colors">Terms &amp; Conditions + Disclaimer</button>
-                    <Link to="/about" className="hover:text-orange-300 transition-colors">About</Link>
-                    <Link to="/contact" className="hover:text-orange-300 transition-colors">Contact</Link>
+                    {/* Fix: Use Next.js Link and href prop. */}
+                    <Link href="/about" className="hover:text-orange-300 transition-colors">About</Link>
+                    {/* Fix: Use Next.js Link and href prop. */}
+                    <Link href="/contact" className="hover:text-orange-300 transition-colors">Contact</Link>
                 </div>
             </div>
         </footer>
@@ -72,7 +65,7 @@ const Footer: React.FC<{ onTermsClick: () => void }> = ({ onTermsClick }) => {
 }
 
 
-export default function App() {
+export default function App({ children }: { children: React.ReactNode }) {
     const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
     const [adConsentGiven, setAdConsentGiven] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
@@ -128,24 +121,16 @@ export default function App() {
 
     return (
         <ErrorBoundary>
-            <Router>
-                <div className="min-h-screen bg-black text-gray-200 circuit-bg flex flex-col">
-                    <Header />
-                    <main className="flex-grow">
-                        <Routes>
-                            <Route path="/" element={<HomePage {...homePageProps} />} />
-                            <Route path="/dashboard" element={<DashboardPage />} />
-                            <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                            <Route path="/about" element={<AboutPage />} />
-                            <Route path="/contact" element={<ContactPage />} />
-                            <Route path="*" element={<HomePage {...homePageProps} />} />
-                        </Routes>
-                    </main>
-                    <Footer onTermsClick={() => setIsTermsModalOpen(true)} />
-                </div>
-                <TermsConditionsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
-                {adConsentGiven && <AdsterraSocialBar />}
-            </Router>
+            {/* Fix: Removed Router and Routes components. App now acts as a layout. */}
+            <div className="min-h-screen bg-black text-gray-200 circuit-bg flex flex-col">
+                <Header />
+                <main className="flex-grow">
+                    {children}
+                </main>
+                <Footer onTermsClick={() => setIsTermsModalOpen(true)} />
+            </div>
+            <TermsConditionsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
+            {adConsentGiven && <AdsterraSocialBar />}
         </ErrorBoundary>
     );
 }
