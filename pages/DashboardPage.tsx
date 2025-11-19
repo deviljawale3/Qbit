@@ -6,7 +6,8 @@ import { Card, Button, Input } from '../components/UI';
 import { QRCodeCanvas } from 'qrcode.react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+// Fix: Replace react-router-dom's Link with Next.js's Link component for proper navigation in a Next.js app.
+import Link from 'next/link';
 import { ClipboardCopy, Trash2, Edit, XCircle, Share2, BarChart2 } from 'lucide-react';
 
 const StatCard: React.FC<{ label: string; value: string | number; icon: React.ReactNode }> = ({ label, value, icon }) => (
@@ -107,7 +108,8 @@ const DashboardPage: React.FC = () => {
             <h1 className="text-4xl font-orbitron font-bold text-orange-400 theme-glow-primary mb-8">Dashboard</h1>
             {links.length === 0 ? (
                 <Card>
-                    <p className="text-center text-gray-400">You haven't shortened any links yet. Go back to the <Link to="/" className="text-orange-300 underline">homepage</Link> to start.</p>
+                    {/* Fix: Use href prop for Next.js Link component. */}
+                    <p className="text-center text-gray-400">You haven't shortened any links yet. Go back to the <Link href="/" className="text-orange-300 underline">homepage</Link> to start.</p>
                 </Card>
             ) : (
                  <motion.div

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+// Fix: Replace useNavigate from react-router-dom with useRouter from next/navigation for Next.js compatible routing.
+import { useRouter } from 'next/navigation';
 import { ShortenedLink } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Card, Button, Input } from '../components/UI';
@@ -12,7 +13,7 @@ import { Link as LinkIcon, ClipboardCopy, Download, Share2, Twitter, Facebook, L
 import { CyberpunkBox, AnimatedSpaceship } from '../components/Cyberpunk';
 import AdSlot from '../components/AdSlot';
 import AdConsent from '../components/AdConsent';
-import AdsterraBanner from '../components/AdsterraBanner';
+import AdsterraNativeBanner from '../components/AdsterraNativeBanner';
 // Fix: Add a side-effect import for '@react-three/fiber'. This enables its
 // JSX type augmentations, making Three.js elements like <mesh> and <pointLight>
 // available in JSX and resolving all related TypeScript errors in this file.
@@ -175,7 +176,7 @@ const HomePage: React.FC<HomePageProps> = ({ isMobile, adConsentGiven, onConsent
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<ShortenedLink | null>(null);
     const [links, setLinks] = useLocalStorage<ShortenedLink[]>('qbit-links', []);
-    const navigate = useNavigate();
+    const router = useRouter();
 
 
     const MOCK_COUNTRIES = ['USA', 'Germany', 'Japan', 'Brazil', 'India', 'UK'];
@@ -313,7 +314,7 @@ const HomePage: React.FC<HomePageProps> = ({ isMobile, adConsentGiven, onConsent
                                         </Button>
                                     </div>
                                     <div className="ad-cluster mt-6">
-                                        <AdsterraBanner id="300x250_main" />
+                                        <AdsterraNativeBanner />
                                     </div>
                                 </div>
                             </form>
@@ -338,7 +339,7 @@ const HomePage: React.FC<HomePageProps> = ({ isMobile, adConsentGiven, onConsent
                                     Shorten Another URL
                                 </Button>
                                 <Button
-                                    onClick={() => navigate('/dashboard')}
+                                    onClick={() => router.push('/dashboard')}
                                     className="flex items-center gap-2"
                                 >
                                     View Dashboard

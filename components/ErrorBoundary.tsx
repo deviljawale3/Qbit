@@ -9,14 +9,10 @@ interface Props { children?: ReactNode; }
 interface State { hasError: boolean; error?: Error | null; info?: ErrorInfo | null; }
 
 export default class ErrorBoundary extends Component<Props, State> {
-  // Fix: Replaced class property state initialization with a constructor.
-  // This explicitly calls `super(props)` and initializes state, resolving
-  // type errors where TypeScript fails to infer `this.props` and `this.setState`
-  // from the base `React.Component` class.
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false, error: null, info: null };
-  }
+  // Fix: Switched to class property syntax for state initialization.
+  // This resolves type errors where properties from the base Component class
+  // (like `state` and `props`) were not being correctly inferred.
+  state: State = { hasError: false, error: null, info: null };
 
   static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
